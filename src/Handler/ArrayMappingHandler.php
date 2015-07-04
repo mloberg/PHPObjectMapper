@@ -213,8 +213,10 @@ class ArrayMappingHandler extends AbstractMappingHandler
                 $property = substr($argument, 1);
                 $value = $this->getArrayValue($this->source, $property);
             } elseif (strpos($argument, '@') === 0) {
-                // TODO: Unsupported
-                $value = $argument;
+                throw new \InvalidArgumentException(sprintf(
+                    "Attempted to call method '%s' on array mapping",
+                    substr($argument, 1)
+                ));
             } else {
                 // TODO: Fetch value from container
                 $value = $argument;

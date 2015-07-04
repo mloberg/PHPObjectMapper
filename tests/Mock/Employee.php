@@ -60,7 +60,7 @@ class Employee
     private $address;
 
     /**
-     * @Mapping("array", setter="setWorkEmail", arguments={"$firstName", "$lastName", "@example.org"})
+     * @Mapping("array", setter="setWorkEmail", arguments={"$firstName", "$lastName", "example.org"})
      * @var string
      */
     private $workEmail;
@@ -249,7 +249,7 @@ class Employee
      */
     public function setWorkEmail($firstName, $lastName, $domain)
     {
-        $this->workEmail = strtolower(substr($firstName, 0, 1) . $lastName) . $domain;
+        $this->workEmail = strtolower(substr($firstName, 0, 1) . $lastName) . '@' . $domain;
         return $this;
     }
 }
