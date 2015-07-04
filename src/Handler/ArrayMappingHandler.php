@@ -170,8 +170,6 @@ class ArrayMappingHandler extends AbstractMappingHandler
         $name = array_shift($segments);
         $newProperty = implode('.', $segments);
 
-        // TODO: Allow null if no more property
-
         if (!isset($array[$name]) && $newProperty) {
             throw new \Exception(sprintf('Unknown property %s in array', $name));
         } elseif (!isset($array[$name])) {
@@ -188,5 +186,43 @@ class ArrayMappingHandler extends AbstractMappingHandler
         }
 
         return $value;
+    }
+
+    /**
+     * Process arguments from Mapping::$arguments
+     *
+     * @param array|null $arguments
+     * @param mixed      $value
+     *
+     * @return array
+     */
+    private function processArguments($arguments, $value = null)
+    {
+        if (is_null($arguments)) {
+            return [ $value ];
+        } elseif (!is_array($arguments)) {
+            throw new \InvalidArgumentException(
+                sprintf('Mapping arguments expected to be an array, got %s', gettype($arguments))
+            );
+        }
+
+        $args = [];
+
+        foreach ($arguments as $argument) {
+            if (strpos($argument, '$') === 0) {
+                $property = substr($argument, 1);
+                $value = $this->getArrayValue($this->source, $property);
+            } elseif (strpos($argument, '@') === 0) {
+                // TODO: Unsupported
+                $value = $argument;
+            } else {
+                // TODO: Fetch value from container
+                $value = $argument;
+            }
+
+            $args[] = $value;
+        }
+
+        return $args;
     }
 }

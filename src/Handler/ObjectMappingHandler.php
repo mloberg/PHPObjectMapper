@@ -140,7 +140,7 @@ class ObjectMappingHandler extends AbstractMappingHandler
                     $mapping->getProperty() ?: $property->getName()
                 );
             } catch (\Exception $e) { // TODO: Update caught exception
-                if (!$mapping->isNullable()) {
+                if (!$mapping->isNullable() && !$mapping->getArguments()) {
                     throw $e;
                 }
             }
@@ -165,5 +165,43 @@ class ObjectMappingHandler extends AbstractMappingHandler
             $property->setAccessible(true);
             $property->setValue($this->target, $value);
         }
+    }
+
+    /**
+     * Process arguments from Mapping::$arguments
+     *
+     * @param array|null $arguments
+     * @param mixed      $value
+     *
+     * @return array
+     */
+    private function processArguments($arguments, $value = null)
+    {
+        if (is_null($arguments)) {
+            return [ $value ];
+        } elseif (!is_array($arguments)) {
+            throw new \InvalidArgumentException(
+                sprintf('Mapping arguments expected to be an array, got %s', gettype($arguments))
+            );
+        }
+
+        $args = [];
+
+        foreach ($arguments as $argument) {
+            if (strpos($argument, '$') === 0) {
+                $property = substr($argument, 1);
+                $value = $this->getReflectionPropertyValue($this->sourceReflection, $this->source, $property);
+            } elseif (strpos($argument, '@') === 0) {
+                $method = substr($argument, 1);
+                $value = call_user_func([$this->source, $method]);
+            } else {
+                // TODO: Fetch value from container
+                $value = $argument;
+            }
+
+            $args[] = $value;
+        }
+
+        return $args;
     }
 }
