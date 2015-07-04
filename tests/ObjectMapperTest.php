@@ -57,6 +57,12 @@ class ObjectMapperTest extends \PHPUnit_Framework_TestCase
 
         // Assert things aren't automatically mapped
         $this->assertNull($employee->getAddress()->getCountry());
+
+        // Test arguments work as expected
+        $this->assertEquals(sprintf('%s, %s %s', $person->getLastName(), $person->getFirstName(), 'Initial'), $employee->getFullName());
+
+        // Test that things aren't mapped if there isn't a valid mapping
+        $this->assertNull($employee->getWorkEmail());
     }
 
     /**
@@ -96,6 +102,12 @@ class ObjectMapperTest extends \PHPUnit_Framework_TestCase
 
         // Assert things aren't automatically mapped
         $this->assertNull($employee->getAddress()->getCountry());
+
+        // Test that things aren't mapped if there isn't a valid mapping
+        $this->assertNull($employee->getFullName());
+
+        // Test arguments
+        $this->assertEquals('jdoe@example.org', $employee->getWorkEmail());
     }
 
     /**

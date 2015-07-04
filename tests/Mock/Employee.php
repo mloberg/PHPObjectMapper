@@ -23,7 +23,8 @@ class Employee
     private $id;
 
     /**
-     * @Mapping({"Person", "array"}, getter="getFirstName", setter="setFirstName")
+     * @Mapping("Person", getter="getFirstName", setter="setFirstName")
+     * @Mapping("array")
      * @var string
      */
     private $firstName;
@@ -33,6 +34,12 @@ class Employee
      * @var string
      */
     private $lastName;
+
+    /**
+     * @Mapping("Person", setter="setFullName", arguments={"$firstName", "Initial", "@getLastName"})
+     * @var string
+     */
+    private $fullName;
 
     /**
      * @Mapping({"Person", "array"}, property="contact.email")
@@ -51,6 +58,12 @@ class Employee
      * @var Address
      */
     private $address;
+
+    /**
+     * @Mapping("array", setter="setWorkEmail", arguments={"$firstName", "$lastName", "@example.org"})
+     * @var string
+     */
+    private $workEmail;
 
     /**
      * Get Id
@@ -122,6 +135,31 @@ class Employee
     }
 
     /**
+     * Get FullName
+     *
+     * @return string
+     */
+    public function getFullName()
+    {
+        return $this->fullName;
+    }
+
+    /**
+     * Set FullName
+     *
+     * @param string $firstName
+     * @param string $middleInitial
+     * @param string $lastName
+     *
+     * @return Employee
+     */
+    public function setFullName($firstName, $middleInitial, $lastName)
+    {
+        $this->fullName = sprintf('%s, %s %s', $lastName, $firstName, $middleInitial);
+        return $this;
+    }
+
+    /**
      * Get Email
      *
      * @return string
@@ -187,6 +225,31 @@ class Employee
     public function setAddress(Address $address)
     {
         $this->address = $address;
+        return $this;
+    }
+
+    /**
+     * Get WorkEmail
+     *
+     * @return string
+     */
+    public function getWorkEmail()
+    {
+        return $this->workEmail;
+    }
+
+    /**
+     * Set WorkEmail
+     *
+     * @param string $firstName
+     * @param string $lastName
+     * @param string $domain
+     *
+     * @return Employee
+     */
+    public function setWorkEmail($firstName, $lastName, $domain)
+    {
+        $this->workEmail = strtolower(substr($firstName, 0, 1) . $lastName) . $domain;
         return $this;
     }
 }
