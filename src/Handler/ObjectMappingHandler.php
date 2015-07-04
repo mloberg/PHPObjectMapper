@@ -166,37 +166,4 @@ class ObjectMappingHandler extends AbstractMappingHandler
             $property->setValue($this->target, $value);
         }
     }
-
-    /**
-     * Process arguments from Mapping::$arguments
-     *
-     * @param array|null $arguments
-     * @param mixed      $value
-     *
-     * @return array
-     */
-    private function processArguments($arguments, $value = null)
-    {
-        if (is_null($arguments)) {
-            return [ $value ];
-        } elseif (!is_array($arguments)) {
-            throw new \InvalidArgumentException(
-                sprintf('Mapping arguments expected to be an array, got %s', gettype($arguments))
-            );
-        }
-
-        $args = [];
-
-        foreach ($arguments as $argument) {
-            try {
-                $value = $this->getReflectionPropertyValue($this->sourceReflection, $this->source, $argument);
-            } catch (\Exception $e) { // TODO: Update caught exception
-                $value = $argument; // TODO: Fetch value from container
-            }
-
-            $args[] = $value;
-        }
-
-        return $args;
-    }
 }
