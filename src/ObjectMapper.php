@@ -10,6 +10,7 @@ namespace Mlo\ObjectMapper;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\Reader;
+use Mlo\ObjectMapper\Handler\ArrayMappingHandler;
 use Mlo\ObjectMapper\Handler\ObjectMappingHandler;
 
 /**
@@ -55,11 +56,10 @@ class ObjectMapper
         }
 
         if (is_array($source)) {
-            trigger_error("Array mapping not yet implemented", E_WARNING);
-            return $target;
+            $handler = new ArrayMappingHandler($source, $target, $this->annotationReader);
+        } else {
+            $handler = new ObjectMappingHandler($source, $target, $this->annotationReader);
         }
-
-        $handler = new ObjectMappingHandler($source, $target, $this->annotationReader);
 
         return $handler->map();
     }

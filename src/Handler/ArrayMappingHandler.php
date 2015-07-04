@@ -1,0 +1,192 @@
+<?php
+/**
+ * ArrayMappingHandler.php
+ * 
+ * @package Mlo\ObjectMapper
+ * @subpackage Handler
+ */
+ 
+namespace Mlo\ObjectMapper\Handler;
+
+use Doctrine\Common\Annotations\Reader;
+use Mlo\ObjectMapper\Annotation\Mapping;
+
+/**
+ * ArrayMappingHandler
+ *
+ * @author Matthew Loberg <loberg.matt@gmail.com>
+ */
+class ArrayMappingHandler extends AbstractMappingHandler
+{
+    /**
+     * @var array
+     */
+    private $source;
+
+    /**
+     * @var object
+     */
+    private $target;
+
+    /**
+     * @var \ReflectionClass
+     */
+    private $targetReflection;
+
+    /**
+     * @var string
+     */
+    private $targetNamespace;
+
+    /**
+     * @var Reader
+     */
+    private $annotationReader;
+
+    /**
+     * Constructor
+     *
+     * @param array  $source
+     * @param object $target
+     * @param Reader $annotationReader
+     */
+    function __construct(array $source, $target, Reader $annotationReader)
+    {
+        $this->source           = $source;
+        $this->target           = $target;
+        $this->annotationReader = $annotationReader;
+
+        $this->targetReflection = new \ReflectionClass($target);
+        $this->targetNamespace = $this->targetReflection->getNamespaceName();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function map()
+    {
+        $this->mapProperties();
+
+        return $this->target;
+    }
+
+    /**
+     * Map object properties
+     */
+    private function mapProperties()
+    {
+        foreach ($this->targetReflection->getProperties() as $targetProperty) {
+            $this->mapProperty($targetProperty);
+        }
+    }
+
+    /**
+     * Map object property
+     *
+     * @param \ReflectionProperty $property
+     */
+    private function mapProperty(\ReflectionProperty $property)
+    {
+        $annotations = $this->annotationReader->getPropertyAnnotations($property);
+
+        foreach ($annotations as $annotation) {
+            if (!$annotation instanceof Mapping) {
+                continue;
+            }
+
+            $supportedSources = $annotation->getSources();
+
+            if (in_array(Mapping::SOURCE_ALL, $supportedSources) || in_array('array', $supportedSources)) {
+                $this->handlePropertyMapping($annotation, $property);
+            }
+        }
+    }
+
+    /**
+     * Handle property mapping
+     *
+     * @param Mapping             $mapping
+     * @param \ReflectionProperty $property
+     *
+     * @throws \Exception If property not found
+     */
+    private function handlePropertyMapping(Mapping $mapping, \ReflectionProperty $property) {
+        $value = null;
+
+        if ($mapping->getGetter()) {
+            // TODO: Throw warning
+        }
+
+        try {
+            $value = $this->getArrayValue($this->source, $mapping->getProperty() ?: $property->getName());
+        } catch (\Exception $e) { // TODO: Update caught exception
+            if (!$mapping->isNullable()) {
+                throw $e;
+            }
+        }
+
+        if ($mapping->getTarget()) {
+            $target = $mapping->getTarget();
+
+            if (!class_exists($target)) {
+                $target = $this->targetNamespace . '\\' . $target;
+            }
+
+            if (is_array($value)) {
+                $targetMapper = new self($value, new $target(), $this->annotationReader);
+            } else {
+                $targetMapper = new ObjectMappingHandler($value, new $target(), $this->annotationReader);
+            }
+
+            $value = $targetMapper->map();
+        }
+
+        if ($mapping->getSetter()) {
+            $arguments = $this->processArguments($mapping->getArguments(), $value);
+            call_user_func_array([$this->target, $mapping->getSetter()], $arguments);
+        } else {
+            $property->setAccessible(true);
+            $property->setValue($this->target, $value);
+        }
+    }
+
+    /**
+     * Get array value
+     *
+     * @param array  $array
+     * @param string $property
+     * @param mixed  $default
+     *
+     * @return mixed
+     * @throws \Exception If property cannot be found
+     */
+    private function getArrayValue($array, $property, $default = null)
+    {
+        if (is_null($property) || $property === '') {
+            return $array;
+        }
+
+        $segments = explode('.', $property);
+        $name = array_shift($segments);
+        $newProperty = implode('.', $segments);
+
+        // TODO: Allow null if no more property
+
+        if (!isset($array[$name]) && $newProperty) {
+            throw new \Exception(sprintf('Unknown property %s in array', $name));
+        } elseif (!isset($array[$name])) {
+            return $default;
+        }
+
+        $value = $array[$name];
+
+        if (is_array($value)) {
+            return $this->getArrayValue($value, $newProperty);
+        } elseif (is_object($value)) {
+            $newReflectionClass = new \ReflectionClass($value);
+            return $this->getReflectionPropertyValue($newReflectionClass, $value, $newProperty);
+        }
+
+        return $value;
+    }
+}
