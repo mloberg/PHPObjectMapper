@@ -32,9 +32,8 @@ class ObjectMapper
      */
     public function __construct(Reader $annotationReader = null)
     {
-        // TODO: Better Annotation Registry setup
         if (is_null($annotationReader)) {
-            AnnotationRegistry::registerFile(__DIR__.'/Annotation/Mapping.php');
+            AnnotationRegistry::registerAutoloadNamespace(__NAMESPACE__ . '\Annotation', __DIR__ . '/Annotation');
             $annotationReader = new AnnotationReader();
         }
 
