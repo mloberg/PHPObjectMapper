@@ -35,13 +35,16 @@ abstract class AbstractMappingHandler implements MappingHandlerInterface
         $name = array_shift($segments);
         $newProperty = implode('.', $segments);
 
-        if (!$reflectionClass->hasProperty($name)) {
+        if (strpos($name, '@') === 0) {
+            $method = substr($name, 1);
+            $value = call_user_func([$object, $method]);
+        } elseif ($reflectionClass->hasProperty($name)) {
+            $prop = $reflectionClass->getProperty($name);
+            $prop->setAccessible(true);
+            $value = $prop->getValue($object);
+        } else {
             throw new \Exception(sprintf('Unknown property %s on class %s', $name, $reflectionClass->getName()));
         }
-
-        $prop = $reflectionClass->getProperty($name);
-        $prop->setAccessible(true);
-        $value = $prop->getValue($object);
 
         if (is_object($value)) {
             $newReflectionClass = new \ReflectionClass($value);

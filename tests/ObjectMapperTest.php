@@ -63,6 +63,9 @@ class ObjectMapperTest extends \PHPUnit_Framework_TestCase
 
         // Test that things aren't mapped if there isn't a valid mapping
         $this->assertNull($employee->getWorkEmail());
+
+        // Test property @methods are called
+        $this->assertEquals($person->getContact()->getEmail(), $employee->getFoo());
     }
 
     /**

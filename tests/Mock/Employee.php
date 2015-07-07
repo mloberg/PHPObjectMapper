@@ -66,6 +66,12 @@ class Employee
     private $workEmail;
 
     /**
+     * @Mapping("Person", property="contact.@getEmail")
+     * @var string
+     */
+    private $foo;
+
+    /**
      * Get Id
      *
      * @return int
@@ -250,6 +256,29 @@ class Employee
     public function setWorkEmail($firstName, $lastName, $domain)
     {
         $this->workEmail = strtolower(substr($firstName, 0, 1) . $lastName) . '@' . $domain;
+        return $this;
+    }
+
+    /**
+     * Get Foo
+     *
+     * @return string
+     */
+    public function getFoo()
+    {
+        return $this->foo;
+    }
+
+    /**
+     * Set Foo
+     *
+     * @param string $foo
+     *
+     * @return Employee
+     */
+    public function setFoo($foo)
+    {
+        $this->foo = $foo;
         return $this;
     }
 }
