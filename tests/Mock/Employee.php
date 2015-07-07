@@ -72,6 +72,12 @@ class Employee
     private $foo;
 
     /**
+     * @Mapping("Person", property="#self")
+     * @var Employee
+     */
+    private $bar;
+
+    /**
      * Get Id
      *
      * @return int
@@ -279,6 +285,29 @@ class Employee
     public function setFoo($foo)
     {
         $this->foo = $foo;
+        return $this;
+    }
+
+    /**
+     * Get Bar
+     *
+     * @return Employee
+     */
+    public function getBar()
+    {
+        return $this->bar;
+    }
+
+    /**
+     * Set Bar
+     *
+     * @param Employee $bar
+     *
+     * @return Employee
+     */
+    public function setBar($bar)
+    {
+        $this->bar = $bar;
         return $this;
     }
 }
