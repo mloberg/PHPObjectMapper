@@ -27,6 +27,10 @@ abstract class AbstractMappingHandler implements MappingHandlerInterface
      */
     protected function getReflectionPropertyValue(\ReflectionClass $reflectionClass, $object, $property)
     {
+        if ($property === '#self') {
+            return $object;
+        }
+
         if (is_null($property) || $property === '') {
             return $object;
         }
