@@ -157,4 +157,19 @@ class ObjectMapperTest extends \PHPUnit_Framework_TestCase
         // Assert things aren't automatically mapped
         $this->assertNull($employee->getAddress()->getCountry());
     }
+
+    /**
+     * @expectedException \Exception
+     * @expectedExceptionMessage Property address is null
+     */
+    public function testNullTargetThrowsException()
+    {
+        $person = (new Person())
+            ->setFirstName('John')
+            ->setLastName('Doe');
+
+        $mapper = new ObjectMapper();
+
+        $mapper->map($person, 'Mlo\ObjectMapper\Tests\Mock\Employee');
+    }
 }

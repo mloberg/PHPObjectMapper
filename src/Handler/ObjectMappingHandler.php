@@ -154,9 +154,20 @@ class ObjectMappingHandler extends AbstractMappingHandler
                 $target = $this->targetNamespace . '\\' . $target;
             }
 
-            // TODO: allow array
-            $targetMapper = new self($value, new $target(), $this->annotationReader);
-            $value = $targetMapper->map();
+            if (is_null($value) && !$mapping->isNullable()) {
+                throw new \Exception(sprintf(
+                    'Property %s is null. Set nullable=true to allow null',
+                    $property->getName()
+                ));
+            } elseif (is_array($value)) {
+                $targetMapper = new ArrayMappingHandler($value, new $target(), $this->annotationReader);
+            } elseif (is_object($value)) {
+                $targetMapper = new self($value, new $target(), $this->annotationReader);
+            }
+
+            if (isset($targetMapper)) {
+                $value = $targetMapper->map();
+            }
         }
 
         if ($mapping->getSetter()) {
