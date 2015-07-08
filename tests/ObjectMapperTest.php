@@ -69,6 +69,9 @@ class ObjectMapperTest extends \PHPUnit_Framework_TestCase
 
         // Test #self property
         $this->assertSame($person, $employee->getBar());
+
+        // Test property and getter can be used together
+        $this->assertEquals($person->getContact()->getEmail(), $employee->getBaz());
     }
 
     /**

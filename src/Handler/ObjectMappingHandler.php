@@ -130,20 +130,21 @@ class ObjectMappingHandler extends AbstractMappingHandler
     {
         $value = null;
 
-        if ($mapping->getGetter()) {
-            $value = call_user_func([$this->source, $mapping->getGetter()]);
-        } else {
-            try {
-                $value = $this->getReflectionPropertyValue(
-                    $this->sourceReflection,
-                    $this->source,
-                    $mapping->getProperty() ?: $property->getName()
-                );
-            } catch (\Exception $e) { // TODO: Update caught exception
-                if (!$mapping->isNullable() && !$mapping->getArguments()) {
-                    throw $e;
-                }
+        try {
+            $value = $this->getReflectionPropertyValue(
+                $this->sourceReflection,
+                $this->source,
+                $mapping->getProperty() ?: $property->getName()
+            );
+        } catch (\Exception $e) { // TODO: Update caught exception
+            if (!$mapping->isNullable() && !$mapping->getArguments() && !$mapping->getGetter()) {
+                throw $e;
             }
+        }
+
+        if ($mapping->getGetter()) {
+            $source = $mapping->getProperty() ? $value : $this->source;
+            $value = call_user_func([$source, $mapping->getGetter()]);
         }
 
         if ($mapping->getTarget()) {

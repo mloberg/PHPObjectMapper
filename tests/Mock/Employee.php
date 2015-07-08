@@ -1,11 +1,11 @@
 <?php
 /**
  * Employee.php
- * 
+ *
  * @package Mlo\ObjectMapper
  * @subpackage Tests
  */
- 
+
 namespace Mlo\ObjectMapper\Tests\Mock;
 
 use Mlo\ObjectMapper\Annotation\Mapping;
@@ -15,7 +15,7 @@ use Mlo\ObjectMapper\Annotation\Mapping;
  *
  * @author Matthew Loberg <loberg.matt@gmail.com>
  */
-class Employee 
+class Employee
 {
     /**
      * @var int
@@ -76,6 +76,12 @@ class Employee
      * @var Employee
      */
     private $bar;
+
+    /**
+     * @Mapping("Person", property="contact", getter="getEmail")
+     * @var string
+     */
+    private $baz;
 
     /**
      * Get Id
@@ -308,6 +314,29 @@ class Employee
     public function setBar($bar)
     {
         $this->bar = $bar;
+        return $this;
+    }
+
+    /**
+     * Get Baz
+     *
+     * @return string
+     */
+    public function getBaz()
+    {
+        return $this->baz;
+    }
+
+    /**
+     * Set Baz
+     *
+     * @param string $baz
+     *
+     * @return Employee
+     */
+    public function setBaz($baz)
+    {
+        $this->baz = $baz;
         return $this;
     }
 }
