@@ -1,11 +1,11 @@
 <?php
 /**
  * AbstractMappingHandler.php
- * 
+ *
  * @package Mlo\ObjectMapper
  * @subpackage Handler
  */
- 
+
 namespace Mlo\ObjectMapper\Handler;
 
 /**
@@ -42,12 +42,15 @@ abstract class AbstractMappingHandler implements MappingHandlerInterface
         if (strpos($name, '@') === 0) {
             $method = substr($name, 1);
             $value = call_user_func([$object, $method]);
-        } elseif ($reflectionClass->hasProperty($name)) {
-            $prop = $reflectionClass->getProperty($name);
+        } else {
+            $prop = $this->getReflectionProperty($reflectionClass, $name);
+
+            if (!$prop) {
+                throw new \Exception(sprintf('Unknown property %s on class %s', $name, $reflectionClass->getName()));
+            }
+
             $prop->setAccessible(true);
             $value = $prop->getValue($object);
-        } else {
-            throw new \Exception(sprintf('Unknown property %s on class %s', $name, $reflectionClass->getName()));
         }
 
         if (is_object($value)) {
@@ -56,5 +59,26 @@ abstract class AbstractMappingHandler implements MappingHandlerInterface
         }
 
         return $value;
+    }
+
+    /**
+     * Get reflection property
+     *
+     * @param \ReflectionClass $reflectionClass
+     * @param string           $name
+     *
+     * @return null|\ReflectionProperty
+     */
+    private function getReflectionProperty(\ReflectionClass $reflectionClass, $name)
+    {
+        if ($reflectionClass->hasProperty($name)) {
+            return $reflectionClass->getProperty($name);
+        }
+
+        if ($parent = $reflectionClass->getParentClass()) {
+            return $this->getReflectionProperty($parent, $name);
+        }
+
+        return null;
     }
 }
