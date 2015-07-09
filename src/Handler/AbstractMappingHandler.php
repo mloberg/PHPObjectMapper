@@ -27,6 +27,11 @@ abstract class AbstractMappingHandler implements MappingHandlerInterface
      */
     protected function getReflectionPropertyValue(\ReflectionClass $reflectionClass, $object, $property)
     {
+        // Handle Doctrine proxies
+        if (is_subclass_of($object, 'Doctrine\ORM\Proxy\Proxy') && !$object->__isInitialized()) {
+            $object->__load();
+        }
+
         if ($property === '#self') {
             return $object;
         }
