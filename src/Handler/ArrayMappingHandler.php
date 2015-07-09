@@ -113,16 +113,16 @@ class ArrayMappingHandler extends AbstractMappingHandler
     private function handlePropertyMapping(Mapping $mapping, \ReflectionProperty $property) {
         $value = null;
 
-        if ($mapping->getGetter()) {
-            // TODO: Throw warning
-        }
-
         try {
             $value = $this->getArrayValue($this->source, $mapping->getProperty() ?: $property->getName());
         } catch (\Exception $e) { // TODO: Update caught exception
             if (!$mapping->isNullable()) {
                 throw $e;
             }
+        }
+
+        if ($mapping->getGetter()) {
+            // TODO: Throw warning
         }
 
         if ($mapping->getTarget()) {
@@ -132,13 +132,20 @@ class ArrayMappingHandler extends AbstractMappingHandler
                 $target = $this->targetNamespace . '\\' . $target;
             }
 
-            if (is_array($value)) {
+            if (is_null($value) && !$mapping->isNullable()) {
+                throw new \Exception(sprintf(
+                    'Property %s is null. Set nullable=true to allow null',
+                    $property->getName()
+                ));
+            } elseif (is_array($value)) {
                 $targetMapper = new self($value, new $target(), $this->annotationReader);
-            } else {
+            } elseif (is_object($value)) {
                 $targetMapper = new ObjectMappingHandler($value, new $target(), $this->annotationReader);
             }
 
-            $value = $targetMapper->map();
+            if (isset($targetMapper)) {
+                $value = $targetMapper->map();
+            }
         }
 
         if ($mapping->getSetter()) {
