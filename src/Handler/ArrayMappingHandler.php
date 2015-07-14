@@ -1,11 +1,11 @@
 <?php
 /**
  * ArrayMappingHandler.php
- * 
+ *
  * @package Mlo\ObjectMapper
  * @subpackage Handler
  */
- 
+
 namespace Mlo\ObjectMapper\Handler;
 
 use Doctrine\Common\Annotations\Reader;
@@ -149,7 +149,7 @@ class ArrayMappingHandler extends AbstractMappingHandler
         }
 
         if ($mapping->getSetter()) {
-            $arguments = $this->processArguments($mapping->getArguments(), $value);
+            $arguments = $this->processArguments($mapping->getArguments(), $value, $mapping->isNullable());
             call_user_func_array([$this->target, $mapping->getSetter()], $arguments);
         } else {
             $property->setAccessible(true);
@@ -200,10 +200,12 @@ class ArrayMappingHandler extends AbstractMappingHandler
      *
      * @param array|null $arguments
      * @param mixed      $value
+     * @param bool       $nullable
      *
      * @return array
+     * @throws \Exception
      */
-    private function processArguments($arguments, $value = null)
+    private function processArguments($arguments, $value = null, $nullable = false)
     {
         if (is_null($arguments)) {
             return [ $value ];
@@ -217,8 +219,15 @@ class ArrayMappingHandler extends AbstractMappingHandler
 
         foreach ($arguments as $argument) {
             if (strpos($argument, '$') === 0) {
-                $property = substr($argument, 1);
-                $value = $this->getArrayValue($this->source, $property);
+                try {
+                    $property = substr($argument, 1);
+                    $value    = $this->getArrayValue($this->source, $property);
+                } catch (\Exception $e) {
+                    if (!$nullable) {
+                        throw $e;
+                    }
+                    $value = null;
+                }
             } elseif (strpos($argument, '@') === 0) {
                 throw new \InvalidArgumentException(sprintf(
                     "Attempted to call method '%s' on array mapping",
