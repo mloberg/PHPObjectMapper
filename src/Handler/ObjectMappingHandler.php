@@ -1,11 +1,11 @@
 <?php
 /**
  * MappingHandler.php
- * 
+ *
  * @package Mlo\ObjectMapper
  * @subpackage Handler
  */
- 
+
 namespace Mlo\ObjectMapper\Handler;
 
 use Doctrine\Common\Annotations\Reader;
@@ -171,7 +171,7 @@ class ObjectMappingHandler extends AbstractMappingHandler
         }
 
         if ($mapping->getSetter()) {
-            $arguments = $this->processArguments($mapping->getArguments(), $value);
+            $arguments = $this->processArguments($mapping->getArguments(), $value, $mapping->isNullable());
             call_user_func_array([$this->target, $mapping->getSetter()], $arguments);
         } else {
             $property->setAccessible(true);
@@ -184,10 +184,12 @@ class ObjectMappingHandler extends AbstractMappingHandler
      *
      * @param array|null $arguments
      * @param mixed      $value
+     * @param boolean    $allowNull
      *
      * @return array
+     * @throws \Exception
      */
-    private function processArguments($arguments, $value = null)
+    private function processArguments($arguments, $value = null, $allowNull = false)
     {
         if (is_null($arguments)) {
             return [ $value ];
@@ -202,7 +204,13 @@ class ObjectMappingHandler extends AbstractMappingHandler
         foreach ($arguments as $argument) {
             if (strpos($argument, '$') === 0) {
                 $property = substr($argument, 1);
-                $value = $this->getReflectionPropertyValue($this->sourceReflection, $this->source, $property);
+                try {
+                    $value = $this->getReflectionPropertyValue($this->sourceReflection, $this->source, $property);
+                } catch (\Exception $e) {
+                    if (!$allowNull) {
+                        throw $e;
+                    }
+                }
             } elseif (strpos($argument, '@') === 0) {
                 $method = substr($argument, 1);
                 $value = call_user_func([$this->source, $method]);
