@@ -17,8 +17,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Mlo\\ObjectMapper\\": "src",
-            "Mlo\\ObjectMapper\\Tests\\": "tests"
+            "Mlo\\ObjectMapper\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mlo\\ObjectMapper\\Tests\\": "tests/"
         }
     }
 }
